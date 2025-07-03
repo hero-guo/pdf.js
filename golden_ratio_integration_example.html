@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PDF.js 黄金分割比例 Viewport 示例</title>
+  
+  <!-- PDF.js 样式 -->
+  <link rel="stylesheet" href="./web/viewer.css">
+  
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+
+    .demo-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+
+    .demo-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .demo-header h1 {
+      margin: 0;
+      font-size: 2.5em;
+      font-weight: 300;
+    }
+
+    .demo-header p {
+      margin: 10px 0 0 0;
+      opacity: 0.9;
+      font-size: 1.1em;
+    }
+
+    .controls-panel {
+      background: #fafafa;
+      border-bottom: 1px solid #e0e0e0;
+      padding: 15px 20px;
+    }
+
+    .control-group {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 10px;
+    }
+
+    .control-group:last-child {
+      margin-bottom: 0;
+    }
+
+    .control-group label {
+      font-weight: 600;
+      color: #333;
+      min-width: 120px;
+    }
+
+    .control-group input[type="range"] {
+      flex: 1;
+      margin: 0 10px;
+    }
+
+    .control-group input[type="file"] {
+      flex: 1;
+    }
+
+    .ratio-display {
+      background: #e8f4fd;
+      border: 1px solid #bee5eb;
+      border-radius: 4px;
+      padding: 5px 10px;
+      font-family: monospace;
+      font-weight: bold;
+      color: #0c5460;
+      min-width: 80px;
+      text-align: center;
+    }
+
+    .preset-buttons {
+      display: flex;
+      gap: 10px;
+    }
+
+    .preset-buttons button, .action-button {
+      padding: 8px 16px;
+      border: 1px solid #007bff;
+      background: white;
+      color: #007bff;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.2s ease;
+    }
+
+    .preset-buttons button:hover, .action-button:hover {
+      background: #007bff;
+      color: white;
+    }
+
+    .preset-buttons button.active {
+      background: #28a745;
+      border-color: #28a745;
+      color: white;
+    }
+
+    .golden-preset {
+      background: linear-gradient(45deg, #ffd700, #ffed4e) !important;
+      border-color: #ffd700 !important;
+      color: #333 !important;
+      font-weight: bold;
+    }
+
+    .golden-preset:hover {
+      background: linear-gradient(45deg, #ffed4e, #ffd700) !important;
+    }
+
+    .viewer-container {
+      height: 600px;
+      position: relative;
+      border: 1px solid #ddd;
+    }
+
+    .pdfViewer {
+      background: #525659;
+    }
+
+    .status-bar {
+      background: #f8f9fa;
+      border-top: 1px solid #e0e0e0;
+      padding: 10px 20px;
+      font-size: 0.9em;
+      color: #666;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .status-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .status-value {
+      font-weight: bold;
+      color: #333;
+    }
+
+    /* 响应式设计 */
+    @media (max-width: 768px) {
+      .control-group {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+      }
+
+      .control-group label {
+        min-width: auto;
+      }
+
+      .preset-buttons {
+        flex-wrap: wrap;
+      }
+
+      .status-bar {
+        flex-direction: column;
+        gap: 5px;
+        align-items: flex-start;
+      }
+    }
+
+    /* 加载指示器 */
+    .loading-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(255, 255, 255, 0.9);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #007bff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="demo-container">
+    <!-- 头部 -->
+    <div class="demo-header">
+      <h1>🌟 黄金分割比例 Viewport</h1>
+      <p>基于PDF.js的美学阅读体验 - 黄金比例 φ ≈ 0.618</p>
+    </div>
+
+    <!-- 控制面板 -->
+    <div class="controls-panel">
+      <!-- 文件上传 -->
+      <div class="control-group">
+        <label>📁 选择PDF文件:</label>
+        <input type="file" id="fileInput" accept=".pdf">
+        <button class="action-button" onclick="loadSamplePDF()">📖 加载示例PDF</button>
+      </div>
+
+      <!-- 黄金分割比例开关 -->
+      <div class="control-group">
+        <label>✨ 黄金分割视图:</label>
+        <input type="checkbox" id="goldenRatioToggle">
+        <span id="toggleStatus">已禁用</span>
+      </div>
+
+      <!-- 比例控制 -->
+      <div class="control-group" id="ratioControls" style="display: none;">
+        <label>📏 页面宽度比例:</label>
+        <input type="range" id="ratioSlider" min="0.3" max="0.8" step="0.01" value="0.618">
+        <div class="ratio-display" id="ratioValue">61.8%</div>
+      </div>
+
+      <!-- 预设按钮 -->
+      <div class="control-group" id="presetControls" style="display: none;">
+        <label>🎯 快速预设:</label>
+        <div class="preset-buttons">
+          <button class="golden-preset" onclick="setGoldenRatio()">φ 黄金比例</button>
+          <button onclick="setRatio(0.5)">1/2 二分比例</button>
+          <button onclick="setRatio(0.6)">3/5 三五比例</button>
+          <button onclick="setRatio(0.75)">3/4 四分比例</button>
+          <button class="action-button" onclick="resetScale()">🔄 重置缩放</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PDF 查看器容器 -->
+    <div class="viewer-container">
+      <div id="viewerContainer" class="pdfViewer">
+        <div class="loading-overlay" id="loadingOverlay">
+          <div>
+            <div class="loading-spinner"></div>
+            <p style="margin-top: 10px; color: #666;">正在加载PDF...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 状态栏 -->
+    <div class="status-bar">
+      <div class="status-item">
+        <span>📊 当前状态:</span>
+        <span class="status-value" id="currentStatus">等待加载文档</span>
+      </div>
+      <div class="status-item">
+        <span>📐 当前比例:</span>
+        <span class="status-value" id="currentRatio">--</span>
+      </div>
+      <div class="status-item">
+        <span>🔍 缩放级别:</span>
+        <span class="status-value" id="currentScale">--</span>
+      </div>
+      <div class="status-item">
+        <span>📄 页面:</span>
+        <span class="status-value" id="currentPage">-- / --</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- PDF.js 库 -->
+  <script src="./build/pdf.mjs" type="module"></script>
+  <script src="./golden_ratio_viewport.js"></script>
+
+  <script type="module">
+    // PDF.js 初始化
+    import * as pdfjsLib from './build/pdf.mjs';
+    
+    // 设置 worker
+    pdfjsLib.GlobalWorkerOptions.workerSrc = './build/pdf.worker.mjs';
+
+    // 全局变量
+    let pdfDoc = null;
+    let pdfViewer = null;
+    let goldenRatioExtension = null;
+    let goldenRatioManager = null;
+    let currentPageNum = 1;
+
+    // 创建简单的PDF查看器
+    class SimplePDFViewer {
+      constructor(container) {
+        this.container = container;
+        this.eventBus = new SimpleEventBus();
+        this._pages = [];
+        this._currentPageNumber = 1;
+        this._currentScale = 1.0;
+        this._currentScaleValue = 'auto';
+        this.pdfDocument = null;
+      }
+
+      get currentPageNumber() {
+        return this._currentPageNumber;
+      }
+
+      set currentPageNumber(val) {
+        this._currentPageNumber = val;
+        this.updateStatus();
+      }
+
+      get currentScale() {
+        return this._currentScale;
+      }
+
+      set currentScale(val) {
+        this._currentScale = val;
+        this.renderCurrentPage();
+        this.updateStatus();
+      }
+
+      get currentScaleValue() {
+        return this._currentScaleValue;
+      }
+
+      set currentScaleValue(val) {
+        this._currentScaleValue = val;
+        if (val === 'auto') {
+          this.currentScale = 1.0;
+        }
+      }
+
+      async loadDocument(pdfDoc) {
+        this.pdfDocument = pdfDoc;
+        
+        // 初始化页面
+        for (let i = 1; i <= pdfDoc.numPages; i++) {
+          const page = await pdfDoc.getPage(i);
+          this._pages.push({
+            id: i,
+            width: page.getViewport({ scale: 1.0 }).width,
+            height: page.getViewport({ scale: 1.0 }).height,
+            pdfPage: page
+          });
+        }
+
+        this.eventBus.dispatch('documentloaded');
+        this.renderCurrentPage();
+      }
+
+      async renderCurrentPage() {
+        if (!this.pdfDocument) return;
+
+        const page = await this.pdfDocument.getPage(this._currentPageNumber);
+        const viewport = page.getViewport({ scale: this._currentScale });
+
+        // 清空容器
+        this.container.innerHTML = '';
+
+        // 创建canvas
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
+
+        // 样式设置
+        canvas.style.display = 'block';
+        canvas.style.margin = '0 auto';
+        canvas.style.border = '1px solid #ccc';
+
+        this.container.appendChild(canvas);
+
+        // 渲染页面
+        const renderContext = {
+          canvasContext: context,
+          viewport: viewport
+        };
+
+        await page.render(renderContext).promise;
+        this.updateStatus();
+      }
+
+      updateStatus() {
+        document.getElementById('currentPage').textContent = 
+          `${this._currentPageNumber} / ${this.pdfDocument?.numPages || 0}`;
+        document.getElementById('currentScale').textContent = 
+          `${Math.round(this._currentScale * 100)}%`;
+      }
+    }
+
+    // 简单的事件总线
+    class SimpleEventBus {
+      constructor() {
+        this.listeners = {};
+      }
+
+      _on(eventName, listener) {
+        if (!this.listeners[eventName]) {
+          this.listeners[eventName] = [];
+        }
+        this.listeners[eventName].push(listener);
+      }
+
+      dispatch(eventName, data = {}) {
+        if (this.listeners[eventName]) {
+          this.listeners[eventName].forEach(listener => {
+            try {
+              listener(data);
+            } catch (e) {
+              console.error('Event listener error:', e);
+            }
+          });
+        }
+      }
+    }
+
+    // 初始化查看器
+    function initViewer() {
+      const container = document.getElementById('viewerContainer');
+      pdfViewer = new SimplePDFViewer(container);
+      
+      // 初始化黄金分割比例扩展
+      goldenRatioExtension = new PDFViewerGoldenRatioExtension(pdfViewer);
+      goldenRatioManager = goldenRatioExtension.getGoldenRatioManager();
+
+      // 绑定事件
+      bindEvents();
+      
+      hideLoading();
+    }
+
+    // 绑定事件
+    function bindEvents() {
+      // 文件上传
+      document.getElementById('fileInput').addEventListener('change', handleFileSelect);
+
+      // 黄金分割比例开关
+      document.getElementById('goldenRatioToggle').addEventListener('change', (e) => {
+        if (e.target.checked) {
+          goldenRatioManager.enable();
+        } else {
+          goldenRatioManager.disable();
+        }
+        updateUI();
+      });
+
+      // 比例滑块
+      const ratioSlider = document.getElementById('ratioSlider');
+      ratioSlider.addEventListener('input', (e) => {
+        const ratio = parseFloat(e.target.value);
+        goldenRatioManager.setRatio(ratio);
+        updateRatioDisplay(ratio);
+      });
+
+      // 监听黄金分割比例变化事件
+      pdfViewer.eventBus._on('goldenratioviewportchanged', updateUI);
+
+      // 键盘导航
+      document.addEventListener('keydown', (e) => {
+        if (e.target.tagName === 'INPUT') return;
+        
+        switch(e.key) {
+          case 'ArrowLeft':
+          case 'PageUp':
+            if (currentPageNum > 1) {
+              currentPageNum--;
+              pdfViewer.currentPageNumber = currentPageNum;
+            }
+            break;
+          case 'ArrowRight':
+          case 'PageDown':
+            if (currentPageNum < (pdfDoc?.numPages || 0)) {
+              currentPageNum++;
+              pdfViewer.currentPageNumber = currentPageNum;
+            }
+            break;
+        }
+      });
+    }
+
+    // 处理文件选择
+    async function handleFileSelect(event) {
+      const file = event.target.files[0];
+      if (file && file.type === 'application/pdf') {
+        showLoading();
+        try {
+          const arrayBuffer = await file.arrayBuffer();
+          await loadPDF(arrayBuffer);
+        } catch (error) {
+          console.error('加载PDF失败:', error);
+          alert('加载PDF失败，请检查文件格式');
+        }
+        hideLoading();
+      }
+    }
+
+    // 加载PDF
+    async function loadPDF(data) {
+      try {
+        pdfDoc = await pdfjsLib.getDocument(data).promise;
+        await pdfViewer.loadDocument(pdfDoc);
+        
+        document.getElementById('currentStatus').textContent = 
+          `已加载 (${pdfDoc.numPages} 页)`;
+        
+        // 如果黄金分割比例已启用，重新应用
+        if (goldenRatioManager.isActive) {
+          setTimeout(() => goldenRatioManager.calculateAndApply(), 100);
+        }
+      } catch (error) {
+        console.error('PDF加载错误:', error);
+        throw error;
+      }
+    }
+
+    // 加载示例PDF（这里需要您提供一个示例PDF文件）
+    window.loadSamplePDF = async function() {
+      showLoading();
+      try {
+        // 这里应该加载一个示例PDF文件
+        // const response = await fetch('./sample.pdf');
+        // const arrayBuffer = await response.arrayBuffer();
+        // await loadPDF(arrayBuffer);
+        
+        // 为演示目的，创建一个简单的PDF
+        alert('请选择本地PDF文件进行演示');
+      } catch (error) {
+        console.error('加载示例PDF失败:', error);
+        alert('加载示例PDF失败');
+      }
+      hideLoading();
+    };
+
+    // 设置黄金分割比例
+    window.setGoldenRatio = function() {
+      goldenRatioManager.setRatio(GOLDEN_RATIO);
+      updateUI();
+    };
+
+    // 设置自定义比例
+    window.setRatio = function(ratio) {
+      goldenRatioManager.setRatio(ratio);
+      updateUI();
+    };
+
+    // 重置缩放
+    window.resetScale = function() {
+      goldenRatioManager.resetScale();
+    };
+
+    // 更新UI
+    function updateUI() {
+      const isActive = goldenRatioManager.isActive;
+      const currentRatio = goldenRatioManager.getRatio();
+      
+      document.getElementById('goldenRatioToggle').checked = isActive;
+      document.getElementById('toggleStatus').textContent = isActive ? '已启用' : '已禁用';
+      document.getElementById('ratioControls').style.display = isActive ? 'flex' : 'none';
+      document.getElementById('presetControls').style.display = isActive ? 'flex' : 'none';
+      
+      updateRatioDisplay(currentRatio);
+      
+      document.getElementById('currentStatus').textContent = 
+        isActive ? `黄金分割模式 (${(currentRatio * 100).toFixed(1)}%)` : 
+        (pdfDoc ? `标准模式 (${pdfDoc.numPages} 页)` : '等待加载文档');
+      
+      document.getElementById('currentRatio').textContent = 
+        isActive ? `${(currentRatio * 100).toFixed(1)}%` : '--';
+    }
+
+    // 更新比例显示
+    function updateRatioDisplay(ratio) {
+      document.getElementById('ratioSlider').value = ratio;
+      document.getElementById('ratioValue').textContent = `${(ratio * 100).toFixed(1)}%`;
+    }
+
+    // 显示加载指示器
+    function showLoading() {
+      document.getElementById('loadingOverlay').style.display = 'flex';
+    }
+
+    // 隐藏加载指示器
+    function hideLoading() {
+      document.getElementById('loadingOverlay').style.display = 'none';
+    }
+
+    // 初始化应用
+    document.addEventListener('DOMContentLoaded', () => {
+      initViewer();
+      updateUI();
+    });
+
+  </script>
+</body>
+</html>
