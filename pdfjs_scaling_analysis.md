@@ -124,13 +124,86 @@ get #pageWidthScaleFactor() {
 3. **优化体验**：在不同显示模式下提供最佳的阅读体验
 4. **多模式支持**：处理单页、双页、演示等不同显示模式
 
-## 总结
+## 为什么需要乘以 currentPage.scale？
 
-这两个缩放计算公式是PDF.js实现自适应页面显示的核心算法，它们考虑了：
-- 容器尺寸限制
-- 页面原始尺寸
-- 当前缩放状态
-- 显示模式（单页/双页）
-- 各种填充和边框空间
+这是最关键的问题！让我详细解释：
 
-通过这些精确的计算，PDF.js能够在各种屏幕尺寸和显示模式下提供良好的PDF阅读体验。
+### 核心原因：currentPage.width 和 currentPage.height 已经是缩放后的尺寸
+
+在 PDF.js 的实现中：
+
+1. **currentPage.width 和 currentPage.height 的来源**：
+   ```javascript
+   get width() {
+     return this.viewport.width;  // 来自 viewport
+   }
+   get height() {
+     return this.viewport.height; // 来自 viewport
+   }
+   ```
+
+2. **viewport 的创建过程**：
+   ```javascript
+   this.viewport = pdfPage.getViewport({
+     scale: this.scale * PixelsPerInch.PDF_TO_CSS_UNITS,
+     rotation: totalRotation,
+   });
+   ```
+
+3. **关键理解**：
+   - `currentPage.width` 和 `currentPage.height` 不是PDF的原始尺寸
+   - 它们是经过 `this.scale` 缩放后的尺寸
+   - `this.scale` 就是 `currentPage.scale`
+
+### 计算逻辑分析
+
+假设：
+- PDF 原始宽度：100 点
+- 当前缩放：1.5
+- 容器宽度：300 像素
+
+那么：
+- `currentPage.width` = 100 × 1.5 = 150（已缩放的宽度）
+- `currentPage.scale` = 1.5
+
+如果我们要计算"适合宽度"的新缩放值：
+
+**错误的计算**（不乘以 currentPage.scale）：
+```javascript
+newScale = 300 / 150 = 2.0
+```
+这意味着最终缩放是 2.0，但实际上我们想要的是：300 / 100 = 3.0
+
+**正确的计算**（乘以 currentPage.scale）：
+```javascript
+newScale = (300 / 150) * 1.5 = 2.0 * 1.5 = 3.0
+```
+
+### 数学推导
+
+设：
+- `originalWidth` = PDF 原始宽度
+- `currentScale` = 当前缩放值
+- `containerWidth` = 容器宽度
+
+则：
+- `currentPage.width = originalWidth * currentScale`
+- 我们想要的新缩放 = `containerWidth / originalWidth`
+
+计算过程：
+```javascript
+newScale = containerWidth / originalWidth
+         = containerWidth / (currentPage.width / currentScale)
+         = (containerWidth / currentPage.width) * currentScale
+```
+
+这就是为什么公式中需要乘以 `currentPage.scale`！
+
+### 总结
+
+乘以 `currentPage.scale` 的原因是：
+1. **补偿已缩放的尺寸**：currentPage.width/height 已经包含了当前缩放
+2. **恢复原始比例**：通过乘以当前缩放值，我们实际上是在计算相对于原始尺寸的新缩放
+3. **保证正确的最终缩放**：确保计算出的缩放值是相对于PDF原始尺寸的绝对缩放
+
+这是一个巧妙的设计，避免了需要存储和传递PDF原始尺寸，而是通过数学变换直接从当前状态计算出正确的新缩放值。
