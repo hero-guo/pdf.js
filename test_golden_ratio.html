@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF.js 黄金比例宽度测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .controls {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+        .control-group {
+            margin-bottom: 10px;
+        }
+        label {
+            display: inline-block;
+            width: 120px;
+            font-weight: bold;
+        }
+        button {
+            margin: 5px;
+            padding: 8px 16px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        input[type="number"] {
+            width: 80px;
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+        }
+        .info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .golden-info {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>PDF.js 黄金比例宽度功能测试</h1>
+        
+        <div class="golden-info">
+            <h3>黄金比例说明：</h3>
+            <p><strong>黄金比例</strong> ≈ 1.618，其倒数约为 0.618</p>
+            <p><strong>功能描述：</strong> 页面宽度设置为可视宽度的黄金比例（约61.8%），用户缩放在此基础上进行</p>
+        </div>
+
+        <div class="info">
+            <h3>实现的功能：</h3>
+            <ul>
+                <li>添加了新的缩放模式 "golden-width"，将页面宽度设置为容器宽度的黄金比例倒数（≈0.618）</li>
+                <li>用户输入的数值缩放比例现在基于黄金比例基础缩放值进行计算</li>
+                <li>当用户设置缩放为1.0时，页面宽度为容器宽度的61.8%</li>
+                <li>当用户设置缩放为1.5时，页面宽度为容器宽度的92.7%（0.618 × 1.5）</li>
+            </ul>
+        </div>
+
+        <div class="controls">
+            <h3>缩放控制测试：</h3>
+            
+            <div class="control-group">
+                <label>预设缩放模式：</label>
+                <button onclick="setScale('golden-width')">黄金比例宽度</button>
+                <button onclick="setScale('page-width')">页面宽度</button>
+                <button onclick="setScale('page-fit')">适合页面</button>
+                <button onclick="setScale('auto')">自动</button>
+            </div>
+
+            <div class="control-group">
+                <label>数值缩放：</label>
+                <input type="number" id="scaleInput" value="1.0" step="0.1" min="0.1" max="5.0">
+                <button onclick="setCustomScale()">应用缩放</button>
+                <small>（基于黄金比例宽度的倍数）</small>
+            </div>
+
+            <div class="control-group">
+                <label>快速缩放：</label>
+                <button onclick="setScale(0.5)">0.5x</button>
+                <button onclick="setScale(0.8)">0.8x</button>
+                <button onclick="setScale(1.0)">1.0x</button>
+                <button onclick="setScale(1.2)">1.2x</button>
+                <button onclick="setScale(1.5)">1.5x</button>
+                <button onclick="setScale(2.0)">2.0x</button>
+            </div>
+        </div>
+
+        <div id="pdf-container" style="border: 2px solid #ddd; height: 600px; overflow: auto;">
+            <div id="pdf-viewer" style="text-align: center; padding: 20px; color: #666;">
+                <h3>PDF Viewer 容器</h3>
+                <p>在实际应用中，这里会显示PDF内容</p>
+                <p>容器宽度：<span id="containerWidth"></span>px</p>
+                <p>黄金比例宽度：<span id="goldenWidth"></span>px</p>
+                <p>当前缩放模式：<span id="currentMode">未设置</span></p>
+                <p>当前缩放值：<span id="currentScale">1.0</span></p>
+            </div>
+        </div>
+
+        <div style="margin-top: 20px;">
+            <h3>代码示例：</h3>
+            <pre style="background: #f8f9fa; padding: 15px; border-radius: 5px; overflow-x: auto;"><code>// 设置黄金比例宽度
+pdfViewer.currentScaleValue = "golden-width";
+
+// 基于黄金比例的数值缩放
+pdfViewer.currentScaleValue = 1.5; // 页面宽度 = 容器宽度 × 0.618 × 1.5
+
+// 获取黄金比例基础缩放值（内部方法）
+const goldenBaseScale = pdfViewer.#getGoldenRatioBaseScale();</code></pre>
+        </div>
+    </div>
+
+    <script>
+        // 模拟 PDF.js viewer 对象
+        const mockPDFViewer = {
+            container: document.getElementById('pdf-container'),
+            currentScaleValue: 1.0,
+            
+            setScale: function(value) {
+                this.currentScaleValue = value;
+                updateDisplay();
+            }
+        };
+
+        function setScale(value) {
+            mockPDFViewer.setScale(value);
+            document.getElementById('currentMode').textContent = value;
+            if (typeof value === 'number') {
+                document.getElementById('currentScale').textContent = value.toFixed(1);
+            } else {
+                document.getElementById('currentScale').textContent = value;
+            }
+        }
+
+        function setCustomScale() {
+            const scale = parseFloat(document.getElementById('scaleInput').value);
+            setScale(scale);
+        }
+
+        function updateDisplay() {
+            const container = document.getElementById('pdf-container');
+            const containerWidth = container.clientWidth;
+            const goldenWidth = containerWidth * 0.618033988749; // 黄金比例倒数
+            
+            document.getElementById('containerWidth').textContent = containerWidth;
+            document.getElementById('goldenWidth').textContent = goldenWidth.toFixed(1);
+        }
+
+        // 初始化显示
+        updateDisplay();
+        
+        // 监听窗口大小变化
+        window.addEventListener('resize', updateDisplay);
+    </script>
+</body>
+</html>

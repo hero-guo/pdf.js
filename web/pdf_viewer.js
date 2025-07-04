@@ -45,6 +45,7 @@ import {
   DEFAULT_SCALE_VALUE,
   docStyle,
   getVisibleElements,
+  GOLDEN_RATIO_INVERSE,
   isPortraitOrientation,
   isValidRotation,
   isValidScrollMode,
@@ -1405,10 +1406,39 @@ class PDFViewer {
     return 1;
   }
 
+  #getGoldenRatioBaseScale() {
+    const currentPage = this._pages[this._currentPageNumber - 1];
+    if (!currentPage) {
+      return 1;
+    }
+    
+    let hPadding = SCROLLBAR_PADDING;
+    
+    if (this.isInPresentationMode) {
+      hPadding = 4; // 2 * 2px
+      if (this._spreadMode !== SpreadMode.NONE) {
+        hPadding *= 2;
+      }
+    } else if (
+      (typeof PDFJSDev === "undefined" || PDFJSDev.test("GENERIC")) &&
+      this.removePageBorders
+    ) {
+      hPadding = 0;
+    } else if (this._scrollMode === ScrollMode.HORIZONTAL) {
+      hPadding = VERTICAL_PADDING;
+    }
+    
+    const goldenContainerWidth = (this.container.clientWidth - hPadding) * GOLDEN_RATIO_INVERSE;
+    return ((goldenContainerWidth / currentPage.width) * currentPage.scale) / this.#pageWidthScaleFactor;
+  }
+
   #setScale(value, options) {
     let scale = parseFloat(value);
 
     if (scale > 0) {
+      // Scale user input relative to golden ratio base scale
+      const goldenBaseScale = this.#getGoldenRatioBaseScale();
+      scale = goldenBaseScale * scale;
       options.preset = false;
       this.#setScaleUpdatePages(scale, value, options);
     } else {
@@ -1455,6 +1485,10 @@ class PDFViewer {
           break;
         case "page-fit":
           scale = Math.min(pageWidthScale, pageHeightScale);
+          break;
+        case "golden-width":
+          // Calculate scale to make page width equal to golden ratio of container width
+          scale = this.#getGoldenRatioBaseScale();
           break;
         case "auto":
           // For pages in landscape mode, fit the page height to the viewer

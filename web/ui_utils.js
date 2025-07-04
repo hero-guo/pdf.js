@@ -24,6 +24,8 @@ const UNKNOWN_SCALE = 0;
 const MAX_AUTO_SCALE = 1.25;
 const SCROLLBAR_PADDING = 40;
 const VERTICAL_PADDING = 5;
+const GOLDEN_RATIO = 1.618033988749;
+const GOLDEN_RATIO_INVERSE = 1 / GOLDEN_RATIO; // ≈ 0.618
 
 const RenderingStates = {
   INITIAL: 0,
@@ -884,6 +886,8 @@ export {
   getActiveOrFocusedElement,
   getPageSizeInches,
   getVisibleElements,
+  GOLDEN_RATIO,
+  GOLDEN_RATIO_INVERSE,
   isPortraitOrientation,
   isValidRotation,
   isValidScrollMode,
