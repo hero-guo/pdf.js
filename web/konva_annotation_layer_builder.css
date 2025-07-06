@@ -1,0 +1,476 @@
+/* Konva标注层样式 */
+.konvaAnnotationLayer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 4;
+}
+
+.konvaAnnotationLayer.active {
+  pointer-events: auto;
+}
+
+/* 标注工具栏样式 */
+.konva-annotation-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  margin-bottom: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.konva-annotation-toolbar button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  background: #fff;
+  color: #495057;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 14px;
+  padding: 0;
+}
+
+.konva-annotation-toolbar button:hover {
+  background: #e9ecef;
+  border-color: #adb5bd;
+}
+
+.konva-annotation-toolbar button.active {
+  background: #007bff;
+  border-color: #007bff;
+  color: #fff;
+}
+
+.konva-annotation-toolbar button:disabled {
+  background: #f8f9fa;
+  border-color: #dee2e6;
+  color: #6c757d;
+  cursor: not-allowed;
+}
+
+.konva-annotation-toolbar .separator {
+  width: 1px;
+  height: 24px;
+  background: #dee2e6;
+  margin: 0 4px;
+}
+
+.konva-annotation-toolbar label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #495057;
+  margin-right: 4px;
+}
+
+/* 工具提示 */
+.konva-annotation-toolbar [data-tooltip] {
+  position: relative;
+}
+
+.konva-annotation-toolbar [data-tooltip]:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #333;
+  color: #fff;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  z-index: 1000;
+  margin-top: 4px;
+}
+
+.konva-annotation-toolbar [data-tooltip]:hover::before {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-bottom: 4px solid #333;
+  z-index: 1000;
+}
+
+/* 右键菜单样式 */
+.konva-context-menu {
+  position: fixed;
+  background: #fff;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  z-index: 9999;
+  min-width: 120px;
+  padding: 4px 0;
+}
+
+.konva-context-menu button {
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  font-size: 14px;
+  color: #333;
+  transition: background-color 0.2s;
+}
+
+.konva-context-menu button:hover {
+  background: #f8f9fa;
+}
+
+.konva-context-menu button:active {
+  background: #e9ecef;
+}
+
+.konva-context-menu .separator {
+  height: 1px;
+  background: #dee2e6;
+  margin: 4px 0;
+}
+
+/* 标注面板样式 */
+.konva-annotation-panel {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 300px;
+  height: 100%;
+  background: #fff;
+  border-left: 1px solid #dee2e6;
+  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1);
+  z-index: 5;
+  overflow-y: auto;
+}
+
+.konva-annotation-panel.collapsed {
+  width: 0;
+  overflow: hidden;
+}
+
+.konva-annotation-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.konva-annotation-panel-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+.konva-annotation-panel-header button {
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: #6c757d;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.konva-annotation-panel-header button:hover {
+  color: #495057;
+}
+
+.konva-annotation-panel-content {
+  padding: 16px;
+}
+
+.konva-annotation-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.konva-annotation-item {
+  padding: 12px;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  margin-bottom: 8px;
+  background: #fff;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.konva-annotation-item:hover {
+  background: #f8f9fa;
+  border-color: #adb5bd;
+}
+
+.konva-annotation-item.selected {
+  background: #e7f3ff;
+  border-color: #007bff;
+}
+
+.konva-annotation-item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.konva-annotation-item-type {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6c757d;
+  text-transform: uppercase;
+}
+
+.konva-annotation-item-time {
+  font-size: 11px;
+  color: #adb5bd;
+}
+
+.konva-annotation-item-content {
+  font-size: 14px;
+  color: #333;
+}
+
+.konva-annotation-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.konva-annotation-item-actions button {
+  font-size: 12px;
+  padding: 4px 8px;
+  border: 1px solid #dee2e6;
+  border-radius: 3px;
+  background: #fff;
+  color: #6c757d;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.konva-annotation-item-actions button:hover {
+  background: #f8f9fa;
+  border-color: #adb5bd;
+}
+
+.konva-annotation-item-actions button.danger {
+  color: #dc3545;
+  border-color: #dc3545;
+}
+
+.konva-annotation-item-actions button.danger:hover {
+  background: #dc3545;
+  color: #fff;
+}
+
+/* 标注统计 */
+.konva-annotation-stats {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 8px 12px;
+  background: #f8f9fa;
+  border-radius: 4px;
+  margin-bottom: 16px;
+  font-size: 12px;
+  color: #6c757d;
+}
+
+.konva-annotation-stats-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.konva-annotation-stats-count {
+  font-weight: 600;
+  color: #333;
+}
+
+/* 导出按钮 */
+.konva-annotation-export {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.konva-annotation-export button {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid #007bff;
+  border-radius: 4px;
+  background: #fff;
+  color: #007bff;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.konva-annotation-export button:hover {
+  background: #007bff;
+  color: #fff;
+}
+
+.konva-annotation-export button:disabled {
+  background: #f8f9fa;
+  border-color: #dee2e6;
+  color: #6c757d;
+  cursor: not-allowed;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .konva-annotation-panel {
+    width: 100%;
+    height: 50%;
+    top: 50%;
+    right: 0;
+    border-left: none;
+    border-top: 1px solid #dee2e6;
+  }
+  
+  .konva-annotation-toolbar {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  
+  .konva-annotation-toolbar button {
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
+  }
+}
+
+/* 加载动画 */
+.konva-annotation-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  color: #6c757d;
+}
+
+.konva-annotation-loading::after {
+  content: '';
+  width: 16px;
+  height: 16px;
+  border: 2px solid #dee2e6;
+  border-top: 2px solid #007bff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-left: 8px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* 空状态 */
+.konva-annotation-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  color: #6c757d;
+  text-align: center;
+}
+
+.konva-annotation-empty-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.konva-annotation-empty-text {
+  font-size: 16px;
+  margin-bottom: 8px;
+}
+
+.konva-annotation-empty-hint {
+  font-size: 14px;
+  opacity: 0.8;
+}
+
+/* 工具按钮图标 */
+.konva-tool-icon {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+}
+
+/* 标注类型颜色 */
+.konva-annotation-type-rectangle {
+  color: #ff0000;
+}
+
+.konva-annotation-type-underline {
+  color: #0000ff;
+}
+
+.konva-annotation-type-strikethrough {
+  color: #ff0000;
+}
+
+.konva-annotation-type-highlight {
+  color: #ffff00;
+}
+
+.konva-annotation-type-freehand {
+  color: #00ff00;
+}
+
+/* 过渡动画 */
+.konva-annotation-panel,
+.konva-annotation-item,
+.konva-annotation-toolbar button {
+  transition: all 0.2s ease-in-out;
+}
+
+/* 高对比度模式支持 */
+@media (prefers-contrast: high) {
+  .konva-annotation-toolbar,
+  .konva-annotation-panel {
+    border-color: #000;
+  }
+  
+  .konva-annotation-toolbar button,
+  .konva-context-menu button {
+    border-color: #000;
+  }
+}
+
+/* 减少动画模式支持 */
+@media (prefers-reduced-motion: reduce) {
+  .konva-annotation-panel,
+  .konva-annotation-item,
+  .konva-annotation-toolbar button {
+    transition: none;
+  }
+  
+  .konva-annotation-loading::after {
+    animation: none;
+  }
+}

@@ -53,6 +53,7 @@ import { TextAccessibilityManager } from "./text_accessibility.js";
 import { TextHighlighter } from "./text_highlighter.js";
 import { TextLayerBuilder } from "./text_layer_builder.js";
 import { XfaLayerBuilder } from "./xfa_layer_builder.js";
+import { KonvaAnnotationLayerBuilder } from "./konva_annotation_layer_builder.js";
 
 /**
  * @typedef {Object} PDFPageViewOptions
@@ -122,6 +123,7 @@ const LAYERS_ORDER = new Map([
   ["textLayer", 1],
   ["annotationLayer", 2],
   ["annotationEditorLayer", 3],
+  ["konvaAnnotationLayer", 4],
   ["xfaLayer", 3],
 ]);
 
@@ -161,7 +163,7 @@ class PDFPageView extends BasePDFPageView {
     regularAnnotations: true,
   };
 
-  #layers = [null, null, null, null];
+  #layers = [null, null, null, null, null];
 
   /**
    * @param {PDFPageViewOptions} options
@@ -209,6 +211,7 @@ class PDFPageView extends BasePDFPageView {
 
     this.annotationLayer = null;
     this.annotationEditorLayer = null;
+    this.konvaAnnotationLayer = null;
     this.textLayer = null;
     this.xfaLayer = null;
     this.structTreeLayer = null;
@@ -411,6 +414,18 @@ class PDFPageView extends BasePDFPageView {
     }
   }
 
+  async #renderKonvaAnnotationLayer() {
+    let error = null;
+    try {
+      await this.konvaAnnotationLayer.render();
+    } catch (ex) {
+      console.error("#renderKonvaAnnotationLayer:", ex);
+      error = ex;
+    } finally {
+      this.#dispatchLayerRendered("konvaannotationlayerrendered", error);
+    }
+  }
+
   async #renderDrawLayer() {
     try {
       await this.drawLayer.render({
@@ -535,6 +550,7 @@ class PDFPageView extends BasePDFPageView {
   reset({
     keepAnnotationLayer = false,
     keepAnnotationEditorLayer = false,
+    keepKonvaAnnotationLayer = false,
     keepXfaLayer = false,
     keepTextLayer = false,
     keepCanvasWrapper = false,
@@ -543,6 +559,7 @@ class PDFPageView extends BasePDFPageView {
     this.cancelRendering({
       keepAnnotationLayer,
       keepAnnotationEditorLayer,
+      keepKonvaAnnotationLayer,
       keepXfaLayer,
       keepTextLayer,
     });
@@ -555,6 +572,8 @@ class PDFPageView extends BasePDFPageView {
         (keepAnnotationLayer && this.annotationLayer?.div) || null,
       annotationEditorLayerNode =
         (keepAnnotationEditorLayer && this.annotationEditorLayer?.div) || null,
+      konvaAnnotationLayerNode =
+        (keepKonvaAnnotationLayer && this.konvaAnnotationLayer?.div) || null,
       xfaLayerNode = (keepXfaLayer && this.xfaLayer?.div) || null,
       textLayerNode = (keepTextLayer && this.textLayer?.div) || null,
       canvasWrapperNode = (keepCanvasWrapper && this.#canvasWrapper) || null;
@@ -563,6 +582,7 @@ class PDFPageView extends BasePDFPageView {
       switch (node) {
         case annotationLayerNode:
         case annotationEditorLayerNode:
+        case konvaAnnotationLayerNode:
         case xfaLayerNode:
         case textLayerNode:
         case canvasWrapperNode:
@@ -583,6 +603,9 @@ class PDFPageView extends BasePDFPageView {
     }
     if (annotationEditorLayerNode) {
       this.annotationEditorLayer.hide();
+    }
+    if (konvaAnnotationLayerNode) {
+      this.konvaAnnotationLayer.hide();
     }
     if (xfaLayerNode) {
       // Hide the XFA layer until all elements are resized
@@ -716,6 +739,7 @@ class PDFPageView extends BasePDFPageView {
           this.cancelRendering({
             keepAnnotationLayer: true,
             keepAnnotationEditorLayer: true,
+            keepKonvaAnnotationLayer: true,
             keepXfaLayer: true,
             keepTextLayer: true,
             cancelExtraDelay: drawingDelay,
@@ -733,6 +757,7 @@ class PDFPageView extends BasePDFPageView {
         this.cssTransform({
           redrawAnnotationLayer: true,
           redrawAnnotationEditorLayer: true,
+          redrawKonvaAnnotationLayer: true,
           redrawXfaLayer: true,
           redrawTextLayer: !postponeDrawing,
           hideTextLayer: postponeDrawing,
@@ -755,6 +780,7 @@ class PDFPageView extends BasePDFPageView {
     this.reset({
       keepAnnotationLayer: true,
       keepAnnotationEditorLayer: true,
+      keepKonvaAnnotationLayer: true,
       keepXfaLayer: true,
       keepTextLayer: true,
       keepCanvasWrapper: true,
@@ -797,6 +823,7 @@ class PDFPageView extends BasePDFPageView {
   cancelRendering({
     keepAnnotationLayer = false,
     keepAnnotationEditorLayer = false,
+    keepKonvaAnnotationLayer = false,
     keepXfaLayer = false,
     keepTextLayer = false,
     cancelExtraDelay = 0,
@@ -829,6 +856,13 @@ class PDFPageView extends BasePDFPageView {
       this.annotationEditorLayer.cancel();
       this.annotationEditorLayer = null;
     }
+    if (
+      this.konvaAnnotationLayer &&
+      (!keepKonvaAnnotationLayer || !this.konvaAnnotationLayer.div)
+    ) {
+      this.konvaAnnotationLayer.cancel();
+      this.konvaAnnotationLayer = null;
+    }
     if (this.xfaLayer && (!keepXfaLayer || !this.xfaLayer.div)) {
       this.xfaLayer.cancel();
       this.xfaLayer = null;
@@ -839,6 +873,7 @@ class PDFPageView extends BasePDFPageView {
   cssTransform({
     redrawAnnotationLayer = false,
     redrawAnnotationEditorLayer = false,
+    redrawKonvaAnnotationLayer = false,
     redrawXfaLayer = false,
     redrawTextLayer = false,
     hideTextLayer = false,
@@ -873,6 +908,9 @@ class PDFPageView extends BasePDFPageView {
         this.#renderDrawLayer();
       }
       this.#renderAnnotationEditorLayer();
+    }
+    if (redrawKonvaAnnotationLayer && this.konvaAnnotationLayer) {
+      this.#renderKonvaAnnotationLayer();
     }
     if (redrawXfaLayer && this.xfaLayer) {
       this.#renderXfaLayer();
@@ -997,6 +1035,33 @@ class PDFPageView extends BasePDFPageView {
       });
     }
 
+    // Initialize Konva annotation layer
+    if (!this.konvaAnnotationLayer) {
+      this.konvaAnnotationLayer = new KonvaAnnotationLayerBuilder({
+        pdfPage,
+        viewport: this.viewport,
+        eventBus: this.eventBus,
+        onAnnotationCreated: (annotation) => {
+          this.eventBus.dispatch("konvaannotationcreated", {
+            source: this,
+            annotation,
+          });
+        },
+        onAnnotationUpdated: (annotation) => {
+          this.eventBus.dispatch("konvaannotationupdated", {
+            source: this,
+            annotation,
+          });
+        },
+        onAnnotationDeleted: (annotation) => {
+          this.eventBus.dispatch("konvaannotationdeleted", {
+            source: this,
+            annotation,
+          });
+        },
+      });
+    }
+
     const { width, height } = viewport;
     this.#originalViewport = viewport;
 
@@ -1072,6 +1137,13 @@ class PDFPageView extends BasePDFPageView {
         if (this.#enableAutoLinking && this.annotationLayer && this.textLayer) {
           await this.#injectLinkAnnotations(textLayerPromise);
         }
+      }
+
+      // Render Konva annotation layer
+      if (this.konvaAnnotationLayer) {
+        await this.#renderKonvaAnnotationLayer();
+        // Add the Konva annotation layer to DOM
+        this.#addLayer(this.konvaAnnotationLayer.div, "konvaAnnotationLayer");
       }
 
       const { annotationEditorUIManager } = this.#layerProperties;
