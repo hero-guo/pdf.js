@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF 标注工具</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f5f5f5;
+            overflow: hidden;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+
+        .toolbar {
+            width: 60px;
+            background-color: #2c3e50;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px 0;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+
+        .tool-button {
+            width: 40px;
+            height: 40px;
+            margin: 8px 0;
+            border: none;
+            border-radius: 8px;
+            background-color: #34495e;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            font-size: 16px;
+        }
+
+        .tool-button:hover {
+            background-color: #3498db;
+            transform: scale(1.1);
+        }
+
+        .tool-button.active {
+            background-color: #e74c3c;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .controls {
+            height: 60px;
+            background-color: white;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            gap: 15px;
+        }
+
+        .file-input {
+            padding: 8px 16px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .page-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .page-input {
+            width: 60px;
+            padding: 6px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            text-align: center;
+        }
+
+        .zoom-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            background-color: #3498db;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .btn:hover {
+            background-color: #2980b9;
+        }
+
+        .btn:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+        }
+
+        .viewer-container {
+            flex: 1;
+            position: relative;
+            overflow: auto;
+            background-color: #ecf0f1;
+            padding: 20px;
+        }
+
+        .pdf-canvas {
+            display: block;
+            margin: 0 auto;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+
+        .annotation-canvas {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            pointer-events: none;
+            border-radius: 8px;
+        }
+
+        .annotation-canvas.drawing {
+            pointer-events: all;
+        }
+
+        .color-picker {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+        }
+
+        .color-option {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 2px solid #fff;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .color-option.active {
+            border-color: #2c3e50;
+            box-shadow: 0 0 0 2px #3498db;
+        }
+
+        .stroke-width {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stroke-slider {
+            width: 80px;
+        }
+
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 18px;
+            color: #7f8c8d;
+        }
+
+        .tooltip {
+            position: relative;
+        }
+
+        .tooltip:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #2c3e50;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            white-space: nowrap;
+            font-size: 12px;
+            z-index: 1001;
+        }
+
+        .annotation-list {
+            position: fixed;
+            right: 20px;
+            top: 80px;
+            width: 250px;
+            max-height: 400px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+        }
+
+        .annotation-item {
+            padding: 10px;
+            border-bottom: 1px solid #ecf0f1;
+            cursor: pointer;
+        }
+
+        .annotation-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        .annotation-type {
+            font-weight: bold;
+            color: #2c3e50;
+            font-size: 12px;
+        }
+
+        .annotation-content {
+            margin-top: 5px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="toolbar">
+            <button class="tool-button tooltip" data-tooltip="选择" id="selectTool">
+                <span>🖱️</span>
+            </button>
+            <button class="tool-button tooltip" data-tooltip="手绘" id="inkTool">
+                <span>✏️</span>
+            </button>
+            <button class="tool-button tooltip" data-tooltip="文本" id="textTool">
+                <span>📝</span>
+            </button>
+            <button class="tool-button tooltip" data-tooltip="高亮" id="highlightTool">
+                <span>🖍️</span>
+            </button>
+            <button class="tool-button tooltip" data-tooltip="下划线" id="underlineTool">
+                <span>📏</span>
+            </button>
+            <button class="tool-button tooltip" data-tooltip="多边形" id="polygonTool">
+                <span>🔷</span>
+            </button>
+            <button class="tool-button tooltip" data-tooltip="矩形" id="rectangleTool">
+                <span>⬜</span>
+            </button>
+            <button class="tool-button tooltip" data-tooltip="圆形" id="circleTool">
+                <span>⭕</span>
+            </button>
+            <button class="tool-button tooltip" data-tooltip="箭头" id="arrowTool">
+                <span>➡️</span>
+            </button>
+            <button class="tool-button tooltip" data-tooltip="标注列表" id="annotationList">
+                <span>📋</span>
+            </button>
+            <button class="tool-button tooltip" data-tooltip="清除所有" id="clearAll">
+                <span>🗑️</span>
+            </button>
+        </div>
+
+        <div class="main-content">
+            <div class="controls">
+                <input type="file" id="fileInput" accept=".pdf" class="file-input">
+                
+                <div class="page-controls">
+                    <button class="btn" id="prevPage">上一页</button>
+                    <input type="number" id="pageInput" class="page-input" value="1" min="1">
+                    <span id="pageCount">/ 1</span>
+                    <button class="btn" id="nextPage">下一页</button>
+                </div>
+
+                <div class="zoom-controls">
+                    <button class="btn" id="zoomOut">缩小</button>
+                    <span id="zoomLevel">100%</span>
+                    <button class="btn" id="zoomIn">放大</button>
+                    <button class="btn" id="fitPage">适应页面</button>
+                </div>
+
+                <div class="color-picker">
+                    <span>颜色:</span>
+                    <div class="color-option active" data-color="#e74c3c" style="background-color: #e74c3c;"></div>
+                    <div class="color-option" data-color="#3498db" style="background-color: #3498db;"></div>
+                    <div class="color-option" data-color="#2ecc71" style="background-color: #2ecc71;"></div>
+                    <div class="color-option" data-color="#f39c12" style="background-color: #f39c12;"></div>
+                    <div class="color-option" data-color="#9b59b6" style="background-color: #9b59b6;"></div>
+                    <div class="color-option" data-color="#1abc9c" style="background-color: #1abc9c;"></div>
+                    <div class="color-option" data-color="#34495e" style="background-color: #34495e;"></div>
+                </div>
+
+                <div class="stroke-width">
+                    <span>粗细:</span>
+                    <input type="range" id="strokeWidth" class="stroke-slider" min="1" max="10" value="2">
+                    <span id="strokeValue">2</span>
+                </div>
+
+                <button class="btn" id="saveAnnotations">保存标注</button>
+                <button class="btn" id="loadAnnotations">加载标注</button>
+            </div>
+
+            <div class="viewer-container" id="viewerContainer">
+                <div class="loading" id="loading">请选择PDF文件...</div>
+                <canvas id="pdfCanvas" class="pdf-canvas" style="display: none;"></canvas>
+                <div id="annotationContainer" style="position: relative;"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="annotation-list" id="annotationListPanel">
+        <div style="padding: 15px; border-bottom: 2px solid #ecf0f1; font-weight: bold;">
+            标注列表
+        </div>
+        <div id="annotationItems"></div>
+    </div>
+
+    <!-- PDF.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    
+    <!-- Konva.js -->
+    <script src="https://unpkg.com/konva@9.2.0/konva.min.js"></script>
+    
+    <!-- 主要脚本 -->
+    <script src="pdf-annotation.js"></script>
+</body>
+</html>

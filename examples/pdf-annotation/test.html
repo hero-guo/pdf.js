@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF 标注工具测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .test-item {
+            margin: 15px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .test-item h3 {
+            margin: 0 0 10px 0;
+            color: #2c3e50;
+        }
+        .test-item p {
+            margin: 5px 0;
+            color: #666;
+        }
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #3498db;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 10px 0;
+            transition: background-color 0.2s;
+        }
+        .btn:hover {
+            background-color: #2980b9;
+        }
+        .feature-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .feature-item {
+            padding: 10px;
+            background-color: #ecf0f1;
+            border-radius: 5px;
+            text-align: center;
+        }
+        .feature-item span {
+            font-size: 24px;
+            display: block;
+            margin-bottom: 5px;
+        }
+        .status {
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .status.ready {
+            background-color: #2ecc71;
+            color: white;
+        }
+        .status.warning {
+            background-color: #f39c12;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>PDF 标注工具测试页面</h1>
+        
+        <div class="test-item">
+            <h3>🚀 快速开始</h3>
+            <p>点击下面的按钮打开PDF标注工具：</p>
+            <a href="index.html" class="btn">打开PDF标注工具</a>
+        </div>
+
+        <div class="test-item">
+            <h3>📋 功能检查清单</h3>
+            <div class="feature-list">
+                <div class="feature-item">
+                    <span>🖱️</span>
+                    <strong>选择工具</strong>
+                    <div class="status ready">已实现</div>
+                </div>
+                <div class="feature-item">
+                    <span>✏️</span>
+                    <strong>手绘标注</strong>
+                    <div class="status ready">已实现</div>
+                </div>
+                <div class="feature-item">
+                    <span>📝</span>
+                    <strong>文本标注</strong>
+                    <div class="status ready">已实现</div>
+                </div>
+                <div class="feature-item">
+                    <span>🖍️</span>
+                    <strong>高亮标注</strong>
+                    <div class="status ready">已实现</div>
+                </div>
+                <div class="feature-item">
+                    <span>📏</span>
+                    <strong>下划线</strong>
+                    <div class="status ready">已实现</div>
+                </div>
+                <div class="feature-item">
+                    <span>🔷</span>
+                    <strong>多边形</strong>
+                    <div class="status ready">已实现</div>
+                </div>
+                <div class="feature-item">
+                    <span>⬜</span>
+                    <strong>矩形</strong>
+                    <div class="status ready">已实现</div>
+                </div>
+                <div class="feature-item">
+                    <span>⭕</span>
+                    <strong>圆形</strong>
+                    <div class="status ready">已实现</div>
+                </div>
+                <div class="feature-item">
+                    <span>➡️</span>
+                    <strong>箭头</strong>
+                    <div class="status ready">已实现</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-item">
+            <h3>🧪 测试步骤</h3>
+            <ol>
+                <li><strong>文件上传测试</strong>
+                    <ul>
+                        <li>点击"选择文件"按钮</li>
+                        <li>选择一个PDF文件</li>
+                        <li>验证PDF是否正确加载和显示</li>
+                    </ul>
+                </li>
+                <li><strong>标注工具测试</strong>
+                    <ul>
+                        <li>依次测试每个标注工具</li>
+                        <li>验证绘制功能是否正常</li>
+                        <li>检查颜色和粗细设置是否生效</li>
+                    </ul>
+                </li>
+                <li><strong>页面导航测试</strong>
+                    <ul>
+                        <li>测试上一页/下一页按钮</li>
+                        <li>测试页码输入框</li>
+                        <li>验证标注在不同页面间的保持</li>
+                    </ul>
+                </li>
+                <li><strong>缩放功能测试</strong>
+                    <ul>
+                        <li>测试放大/缩小按钮</li>
+                        <li>测试适应页面功能</li>
+                        <li>验证标注在缩放后的正确显示</li>
+                    </ul>
+                </li>
+                <li><strong>保存/加载测试</strong>
+                    <ul>
+                        <li>创建一些标注</li>
+                        <li>点击"保存标注"导出数据</li>
+                        <li>清除所有标注</li>
+                        <li>点击"加载标注"导入数据</li>
+                        <li>验证标注是否正确恢复</li>
+                    </ul>
+                </li>
+            </ol>
+        </div>
+
+        <div class="test-item">
+            <h3>⚠️ 注意事项</h3>
+            <ul>
+                <li>需要在HTTP服务器环境下运行，不能直接打开HTML文件</li>
+                <li>推荐使用现代浏览器（Chrome 60+, Firefox 55+, Safari 12+, Edge 79+）</li>
+                <li>测试时建议使用小尺寸的PDF文件（< 10MB）</li>
+                <li>如果遇到CORS错误，请确保在本地服务器环境下运行</li>
+            </ul>
+        </div>
+
+        <div class="test-item">
+            <h3>🔧 本地服务器启动</h3>
+            <p>如果需要启动本地服务器，可以使用以下命令之一：</p>
+            <pre style="background-color: #2c3e50; color: white; padding: 10px; border-radius: 5px; overflow-x: auto;">
+# Python 3
+python -m http.server 8000
+
+# Python 2
+python -m SimpleHTTPServer 8000
+
+# Node.js
+npx http-server
+
+# PHP
+php -S localhost:8000
+            </pre>
+            <p>然后在浏览器中访问 <code>http://localhost:8000/examples/pdf-annotation/index.html</code></p>
+        </div>
+
+        <div class="test-item">
+            <h3>📊 性能建议</h3>
+            <ul>
+                <li>建议PDF文件大小不超过50MB</li>
+                <li>复杂标注过多时可能影响性能</li>
+                <li>大量标注建议分页保存</li>
+                <li>移动设备上可能需要调整触摸事件处理</li>
+            </ul>
+        </div>
+
+        <div class="test-item">
+            <h3>🐛 常见问题</h3>
+            <ul>
+                <li><strong>PDF不能加载</strong>: 检查文件格式是否正确，确保不是损坏的PDF</li>
+                <li><strong>标注不能绘制</strong>: 确保选择了正确的工具，检查是否在PDF区域内操作</li>
+                <li><strong>多边形不能完成</strong>: 需要双击来完成多边形绘制</li>
+                <li><strong>标注保存失败</strong>: 检查浏览器是否支持文件下载功能</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // 简单的功能检测
+        document.addEventListener('DOMContentLoaded', function() {
+            // 检测必要的API支持
+            const checks = [
+                { name: 'FileReader API', test: () => window.FileReader },
+                { name: 'Canvas API', test: () => document.createElement('canvas').getContext },
+                { name: 'Blob API', test: () => window.Blob },
+                { name: 'URL.createObjectURL', test: () => window.URL && window.URL.createObjectURL }
+            ];
+
+            console.log('浏览器兼容性检查：');
+            checks.forEach(check => {
+                const supported = check.test();
+                console.log(`${check.name}: ${supported ? '✓' : '✗'}`);
+            });
+
+            // 检测是否在HTTP服务器环境
+            if (location.protocol === 'file:') {
+                console.warn('警告：当前在file://协议下运行，可能会遇到CORS问题。建议在HTTP服务器环境下运行。');
+            }
+        });
+    </script>
+</body>
+</html>
